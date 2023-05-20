@@ -25,7 +25,7 @@ if (!dir.exists(output_path)) {
 }
 
 # Read HIV data
-hiv <- read.csv(file.path('data', 'HealthGymV2_CbdrhDatathon_ART4HIV.csv'))
+hiv <- fread(file.path('data', 'HealthGymV2_CbdrhDatathon_ART4HIV.csv'))
 
 ## 1. Inspect and transform data -------------------------------------------------------------------------------------
 
@@ -39,11 +39,11 @@ hiv$id <- hiv$id + 1
 
 # Transform columns into Boolean
 boolean_cols <- hiv %>% select(extra_pk:drug_m) %>% names()
-hiv[, boolean_cols] <-  lapply(hiv[, boolean_cols], as.logical)
+hiv[, (boolean_cols) := lapply(.SD, as.logical), .SDcols = boolean_cols]
 
 # Factorise certain columns and give sensible levels
 factor_cols <- hiv %>% select(gender:extra_pi) %>% names()
-hiv[, factor_cols] <-  lapply(hiv[, factor_cols], factor)
+hiv[, (factor_cols) := lapply(.SD, as.factor), .SDcols = factor_cols]
 
 levels(hiv$gender) <- c('male', 'female')
 levels(hiv$ethnic) <- c('asian', 'afro', 'caucasian', 'other')
@@ -76,8 +76,11 @@ hiv %>% plot_bar(by = 'base_drug_comb', nrow = 4, title = 'EDA - Drug Combo')
 hiv_eng <- hiv %>% 
   mutate(vl_detect = ifelse(vl >= 200, TRUE, FALSE),
          immunosupp = ifelse(cd4 < 50, TRUE, FALSE)
-
-
+  )
+         
+# Select first and last observation for each patient ID
+hiv[, .SD[c(1, .N)], by = id]
+         
 
 # hiv %>% filter(base_drug_comb == '')
 
