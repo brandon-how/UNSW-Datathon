@@ -5,7 +5,7 @@
 ## 0. Initialisation ------------------------------------------------------------------------------------------------
 
 # Set working directory
-setwd("C:/Users/brand/OneDrive/Desktop/Health Data Science/Datathon")
+setwd("C:/Users/Brandon/OneDrive - The University of Melbourne/Desktop/Health Data Science/Datathon/UNSW-Datathon")
 
 # Install and load libraries 
 packages <- c('tidyverse', 'forecast', 'DataExplorer')
@@ -18,40 +18,42 @@ if (any(installed_packages == FALSE)) {
 invisible(lapply(packages, require, character.only = TRUE))
 
 # Set file paths  
-project_path <- r'{C:\Users\brand\OneDrive\Desktop\Health Data Science\Datathon\}'
-output_path <- file.path(project_path, 'output')
+output_path <- file.path(getwd(), 'output')
 
-if (!dir.exists(file.path(project_path, 'output'))) {
-  dir.create(file.path(project_path, 'output'))
+if (!dir.exists(output_path)) {
+  dir.create(file.path(output_path))
 }
 
 # Read HIV data
-hiv <- read.csv(file.path(project_path, 'data', 'HealthGymV2_CbdrhDatathon_ART4HIV.csv'))
+hiv <- read.csv(file.path('data', 'HealthGymV2_CbdrhDatathon_ART4HIV.csv'))
 
 ## 1. Inspect and transform data -------------------------------------------------------------------------------------
 
 str(hiv)
 
 # Change some names coz they suck
-names(hiv) <- c('vl', 'cd4', 'relcd4', 'gender', 'ethnic', 'base_drug_comb', 'comp_ini', 'comp_nnrti', 'extra_pi', 'extra_pl', 'vl_m', 'cd4_m', 'drug_m', 'id', 'time')
+names(hiv) <- c('vl', 'cd4', 'relcd4', 'gender', 'ethnic', 'base_drug_comb', 'comp_ini', 'comp_nnrti', 'extra_pi', 'extra_pk', 'vl_m', 'cd4_m', 'drug_m', 'id', 'time')
 
-# Factorise certain columns
-factor_cols <- hiv %>% select(gender:drug_m) %>% names()
-hiv[, factor_cols] <-  lapply(hiv[, factor_cols], factor)
-assd
-str(hiv)
-summary(hiv)
-
-# Now, give levels sensible names
-levels(hiv$gender) <- c('male', 'female')
-levels(hiv$ethnic) <- c('asian', 'afro', 'caucasian', 'other')
-levels(hiv$base_drug_comb) <- c(1, 2, 3, 4, 5, 6)
-levels(hiv$comp_ini) <- c('dtg', 'ral', 'evg', 'not_applied')
-levels(hiv$comp_nnrti) <- c('nvp', 'efv', 'rov', 'not_applied')
-levels(hiv$extra_pi) <- c(1, 2, 3, 4, 5, 6)
+# Change patient ID to start with 1
 hiv$id <- hiv$id + 1
 
+# Transform columns into Boolean
+boolean_cols <- hiv %>% select(extra_pk:drug_m) %>% names()
+hiv[, boolean_cols] <-  lapply(hiv[, boolean_cols], as.logical)
+
+# Factorise certain columns and give sensible levels
+factor_cols <- hiv %>% select(gender:extra_pi) %>% names()
+hiv[, factor_cols] <-  lapply(hiv[, factor_cols], factor)
+
+levels(hiv$gender) <- c('male', 'female')
+levels(hiv$ethnic) <- c('asian', 'afro', 'caucasian', 'other')
+levels(hiv$base_drug_comb) <- c('ftc_tdf','3tc_abc', 'ftc_taf', 'drv_ftc_tdf', 'ftc_rtvb_tdf', 'other') # ftc_taf & 3tc_abc & ftc_tdf is NRTI backbone
+levels(hiv$comp_ini) <- c('dtg', 'ral', 'evg', 'not_applied')
+levels(hiv$comp_nnrti) <- c('nvp', 'efv', 'rpv', 'not_applied')
+levels(hiv$extra_pi) <- c('drv', 'rtvb', 'lpv', 'rtv', 'atv', 'not_applied')
+
 str(hiv)
+summary(hiv)
 
 ## 2. Quick EDA --------------------------------------------------------------------------------------------------
 
@@ -67,25 +69,19 @@ hiv %>% plot_bar(by = 'ethnic', nrow = 4, title = 'EDA - Ethnicity')
 hiv %>% plot_bar(by = 'gender', nrow = 4, title = 'EDA - Gender')
 hiv %>% plot_bar(by = 'base_drug_comb', nrow = 4, title = 'EDA - Drug Combo')
 
-# Pairwise EDA 
-
-# Do some plotting stratified by patients
-top10id <- hiv %>% filter(id <= 10)
-
-top10id %>% 
-  ggplot(aes(x = time)) +
-  geom_line(aes(y = log(vl), color = factor(id)))
+## 3. Quick feature engineering -----------------------------------------------------------------------------
   
+# 1. Add indicator for detectable viral load using Kirby cut off of <200
+# 2. Give CD4 status from slides
+hiv_eng <- hiv %>% 
+  mutate(vl_detect = ifelse(vl >= 200, TRUE, FALSE),
+         immunosupp = ifelse(cd4 < 50, TRUE, FALSE)
 
 
 
-log(hiv$vl)
+# hiv %>% filter(base_drug_comb == '')
 
-
-
-
-
-
+hiv %>% filter(comp_ini == 'not_applied') %>% head(10) %>% select(base_drug_comb)
 
 
 
