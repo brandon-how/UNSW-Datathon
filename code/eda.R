@@ -5,7 +5,7 @@
 ## 0. Initialisation ------------------------------------------------------------------------------------------------
 
 # Set working directory
-setwd("C:/Users/Brandon/OneDrive - The University of Melbourne/Desktop/Health Data Science/Datathon/UNSW-Datathon")
+setwd("C:/Users/brand/OneDrive/Desktop/Health Data Science/Datathon")
 
 # Install and load libraries 
 packages <- c('tidyverse', 'forecast', 'DataExplorer', 'data.table')
@@ -47,7 +47,7 @@ hiv[, (factor_cols) := lapply(.SD, as.factor), .SDcols = factor_cols]
 
 levels(hiv$gender) <- c('male', 'female')
 levels(hiv$ethnic) <- c('asian', 'afro', 'caucasian', 'other')
-levels(hiv$base_drug_comb) <- c('ftc_tdf','3tc_abc', 'ftc_taf', 'drv_ftc_tdf', 'ftc_rtvb_tdf', 'other') # ftc_taf & 3tc_abc & ftc_tdf is NRTI backbone
+levels(hiv$base_drug_comb) <- c('ftc_tdf','3tc_abc', 'ftc_taf', 'drv_ftc_tdf', 'ftc_rtvb_tdf', 'other') 
 levels(hiv$comp_ini) <- c('dtg', 'ral', 'evg', 'not_applied')
 levels(hiv$comp_nnrti) <- c('nvp', 'efv', 'rpv', 'not_applied')
 levels(hiv$extra_pi) <- c('drv', 'rtvb', 'lpv', 'rtv', 'atv', 'not_applied')
@@ -75,22 +75,28 @@ hiv %>% plot_bar(by = 'base_drug_comb', nrow = 4, title = 'EDA - Drug Combo')
 # 2. Give CD4 status from slides
 hiv_eng <- hiv %>% 
   mutate(vl_detect = ifelse(vl >= 200, TRUE, FALSE),
-         immunosupp = ifelse(cd4 < 50, TRUE, FALSE)
-  )
-         
+         immunosupp = ifelse(cd4 < 50, TRUE, FALSE),
+         immun_recover = ifelse(cd4 > 500, TRUE, FALSE))
+
+# 3. Give backbone info
+hiv_eng[, ':=' (backbone = fifelse(base_drug_comb %like% 'ftc_(.*?)tdf', 'ftc_tdf', fifelse(base_drug_comb %like% '3tc_(.*?)abc', '3tc_abc',  fifelse(base_drug_comb %like% 'ftc(.*?)taf', 'ftc_taf', 'other'))))]
+hiv_eng
+
 # Select first and last observation for each patient ID
+hiv[, .SD[c(1, .N)], by = id] %>% head(6)
+
+hiv[, .SD[c(1, .N)], by = id]  %>% pivot_wider(names_from = cd4, values_from = vl)
+
+hiv[, mean(vl_m), by = id]
+hiv[, mean(cd4_m), by = id]
+hiv[, mean(drug_m), by = id]
+
+
+
+hiv[id <= 5] %>% mutate(new_vl = log10(vl)) %>% 
+  ggplot(aes(x = time, y = new_vl, colour = factor(id))) + 
+  geom_line()
+
+
+
 hiv[, .SD[c(1, .N)], by = id]
-         
-
-# hiv %>% filter(base_drug_comb == '')
-
-hiv %>% filter(comp_ini == 'not_applied') %>% head(10) %>% select(base_drug_comb)
-
-
-
-
-
-
-
-
-
