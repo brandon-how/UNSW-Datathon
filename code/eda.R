@@ -8,7 +8,7 @@
 setwd("C:/Users/brand/OneDrive/Desktop/Health Data Science/Datathon")
 
 # Install and load libraries 
-packages <- c('tidyverse', 'forecast', 'DataExplorer')
+packages <- c('tidyverse', 'forecast', 'DataExplorer', 'data.table')
 installed_packages <- packages %in% rownames(installed.packages())
 
 if (any(installed_packages == FALSE)) {
@@ -38,7 +38,7 @@ names(hiv) <- c('vl', 'cd4', 'relcd4', 'gender', 'ethnic', 'base_drug_comb', 'co
 # Factorise certain columns
 factor_cols <- hiv %>% select(gender:drug_m) %>% names()
 hiv[, factor_cols] <-  lapply(hiv[, factor_cols], factor)
-assd
+
 str(hiv)
 summary(hiv)
 
@@ -76,13 +76,10 @@ top10id %>%
   ggplot(aes(x = time)) +
   geom_line(aes(y = log(vl), color = factor(id)))
   
-
+as.data.table(hiv) %>% filter(vl_m == 1)
 
 
 log(hiv$vl)
-
-
-
 
 
 
