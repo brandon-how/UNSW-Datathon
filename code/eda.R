@@ -34,24 +34,7 @@ str(hiv)
 # Change some names coz they suck
 names(hiv) <- c('vl', 'cd4', 'relcd4', 'gender', 'ethnic', 'base_drug_comb', 'comp_ini', 'comp_nnrti', 'extra_pi', 'extra_pk', 'vl_m', 'cd4_m', 'drug_m', 'id', 'time')
 
-<<<<<<< HEAD
-# Factorise certain columns
-factor_cols <- hiv %>% select(gender:drug_m) %>% names()
-hiv[, factor_cols] <-  lapply(hiv[, factor_cols], factor)
-
-str(hiv)
-summary(hiv)
-
-# Now, give levels sensible names
-levels(hiv$gender) <- c('male', 'female')
-levels(hiv$ethnic) <- c('asian', 'afro', 'caucasian', 'other')
-levels(hiv$base_drug_comb) <- c(1, 2, 3, 4, 5, 6)
-levels(hiv$comp_ini) <- c('dtg', 'ral', 'evg', 'not_applied')
-levels(hiv$comp_nnrti) <- c('nvp', 'efv', 'rov', 'not_applied')
-levels(hiv$extra_pi) <- c(1, 2, 3, 4, 5, 6)
-=======
 # Change patient ID to start with 1
->>>>>>> fd1daecd88627193acd4c44eb293055c7d596260
 hiv$id <- hiv$id + 1
 
 # Transform columns into Boolean
@@ -87,10 +70,7 @@ hiv %>% plot_bar(by = 'gender', nrow = 4, title = 'EDA - Gender')
 hiv %>% plot_bar(by = 'base_drug_comb', nrow = 4, title = 'EDA - Drug Combo')
 
 ## 3. Quick feature engineering -----------------------------------------------------------------------------
-  
-<<<<<<< HEAD
-as.data.table(hiv) %>% filter(vl_m == 1)
-=======
+
 # 1. Add indicator for detectable viral load using Kirby cut off of <200
 # 2. Give CD4 status from slides
 hiv_eng <- hiv %>% 
@@ -103,7 +83,6 @@ hiv[, .SD[c(1, .N)], by = id]
          
 
 # hiv %>% filter(base_drug_comb == '')
->>>>>>> fd1daecd88627193acd4c44eb293055c7d596260
 
 hiv %>% filter(comp_ini == 'not_applied') %>% head(10) %>% select(base_drug_comb)
 
