@@ -91,6 +91,7 @@ hiv[, mean(vl_m), by = id]
 hiv[, mean(cd4_m), by = id]
 hiv[, mean(drug_m), by = id]
 
+hiv[, unique(base_drug_comb), by = id]
 
 
 hiv[id <= 5] %>% mutate(new_vl = log10(vl)) %>% 
